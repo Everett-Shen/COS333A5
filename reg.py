@@ -115,7 +115,8 @@ def init_gui(args, queue):
             'class_id': classid
         }
         # send to server
-        call_server_update_data(query, True, args, queue)
+        if len(list_widget_row) > 1:
+            call_server_update_data(query, True, args, queue)
 
     # slots to handle events
     dept_edit.textChanged.connect(submit_slot)
