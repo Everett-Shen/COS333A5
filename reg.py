@@ -113,10 +113,12 @@ def init_gui(window, args):
         query = {
             'class_id': classid
         }
-
+        print(list_widget_row)
         # send to server
-        call_server_update_data(window, list_view, query,
-                                True, args)
+        print()
+        if len(list_widget_row) > 1:
+            call_server_update_data(window, list_view, query,
+                                    True, args)
 
     # submit button
     submit_button = QPushButton('Submit')
