@@ -23,32 +23,33 @@ def consume_cpu_time(delay):
     while (process_time() - initial_time) < delay:
         i += 1  # Do a nonsensical computation.
 
-def main():
+# sends (True, results) if succceeds, (False, err_message) if fails
+def handle_client(sock, delay):
+    print('Forked child process')
+    consume_cpu_time(delay)
+    in_flo = sock.makefile(mode='rb')
+    query = load(in_flo)
+    # get_detail
+    if "class_id" in query:
+        print("Received command: get_detail")
+        to_return = get_table_results(query["class_id"])
+    # get_overviews
+    else:
+        print("Received command: get_overviews")
+        to_return = get_overview(query)
 
-    # sends (True, results) if succceeds, (False, err_message) if fails
-    def handle_client(sock, delay):
-        print('Forked child process')
-        consume_cpu_time(delay)
-        in_flo = sock.makefile(mode='rb')
-        query = load(in_flo)
-        # get_detail
-        if "class_id" in query:
-            print("Received command: get_detail")
-            to_return = get_table_results(query["class_id"])
-        # get_overviews
-        else:
-            print("Received command: get_overviews")
-            to_return = get_overview(query)
+    # if request was successful, turn it into a tuple
+    # (if it failed, it is already a tuple)
+    if not isinstance(to_return, tuple):
+        to_return = (True, to_return)
 
-        # if request was successful, turn it into a tuple
-        # (if it failed, it is already a tuple)
-        if not isinstance(to_return, tuple):
-            to_return = (True, to_return)
+    out_flo = sock.makefile(mode='wb')
+    dump(to_return, out_flo)
+    out_flo.flush()
+    print('Closed socket in child process')
 
-        out_flo = sock.makefile(mode='wb')
-        dump(to_return, out_flo)
-        out_flo.flush()
-        print('Closed socket in child process')
+
+def main():    
 
     parser = argparse.ArgumentParser(
         description='Server for the registrar application',

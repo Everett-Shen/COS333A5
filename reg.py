@@ -147,7 +147,8 @@ def init_gui(args, queue):
 # --------------------------------------------------------------------
 # THREAD HANDLING CODE
 
-
+# WorkerThread class - takes in params for call to server and makes
+# request on new thread
 class WorkerThread (Thread):
 
     def __init__(self, host, port, query, is_class_details, queue):
@@ -169,7 +170,6 @@ class WorkerThread (Thread):
 
                 in_flo = sock.makefile(mode='rb')
                 result = load(in_flo)
-                print('new socket!!')
 
         except EOFError as err:
             result = (0, str(err))
@@ -203,8 +203,6 @@ def update_view(list_view, class_data):
 def call_server_update_data(query, is_class_details, args, queue):
     print('Sent command: ', 'get_details'
           if is_class_details else 'get_overviews')
-    # return_status, update_text = call_server(
-    #     args.host, int(args.port), query)
     worker_thread = WorkerThread(
         args.host, int(args.port), query, is_class_details, queue)
     worker_thread.start()
@@ -212,8 +210,11 @@ def call_server_update_data(query, is_class_details, args, queue):
 # --------------------------------------------------------------------
 # POLL HANDLING
 
+# handle new additions to queue--new data from requests to server
 def poll_queue_helper(queue, window, list_view):
 
+    # while the queue has new data, update the GUI with either
+    # class details or general class data output
     while True:
         try:
             return_status, update_text, is_class_details = queue.get(block=False)
@@ -253,22 +254,23 @@ def main():
     window = QMainWindow()
     window.setWindowTitle('Princeton University Class Search')
 
-    # create queue for multi-threaded behavior; pass it in
+    # create queue for multi-threaded behavior; pass it into GUI init
     queue = Queue()
 
     # initialize GUI elements
     layout, list_view = init_gui(args, queue)
 
+    # check poll every 100 milliseconds, update GUI with new poll data
     def poll_queue():
         poll_queue_helper(queue, window, list_view)
     timer = QTimer()
     timer.timeout.connect(poll_queue)
-    timer.setInterval(1000)
+    timer.setInterval(100)
     timer.start()
 
+    # final GUI init steps
     frame = QFrame()
     frame.setLayout(layout)
-
     window.setCentralWidget(frame)
     screen_size = QDesktopWidget().screenGeometry()
     window.resize(screen_size.width()//2, screen_size.height()//2)
