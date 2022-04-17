@@ -13,7 +13,7 @@ from threading import Thread
 from queue import Queue, Empty
 from PyQt5.QtWidgets import QApplication, QFrame, QLabel, QMainWindow
 from PyQt5.QtWidgets import QGridLayout, QDesktopWidget, QVBoxLayout
-from PyQt5.QtWidgets import QHBoxLayout, QLineEdit, QPushButton
+from PyQt5.QtWidgets import QHBoxLayout, QLineEdit
 from PyQt5.QtWidgets import QListWidget, QListWidgetItem, QMessageBox
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QFont
@@ -152,8 +152,9 @@ def init_gui(args, queue):
 # request on new thread
 class WorkerThread (Thread):
 
-    def __init__(self, host, port, query, is_class_details, queue):
+    def __init__(self, host_details, query, is_class_details, queue):
         Thread.__init__(self)
+        host, port = host_details
         self._host = host
         self._port = port
         self._query = query
@@ -179,7 +180,8 @@ class WorkerThread (Thread):
             result = (0, str(ex))
 
         finally:
-            self._queue.put((result[0], result[1], self._is_class_details))
+            self._queue.put((result[0],
+                result[1], self._is_class_details))
 
 # --------------------------------------------------------------------
 # SERVER CALLING CODE
@@ -205,7 +207,7 @@ def call_server_update_data(query, is_class_details, args, queue):
     print('Sent command: ', 'get_details'
           if is_class_details else 'get_overviews')
     worker_thread = WorkerThread(
-        args.host, int(args.port), query, is_class_details, queue)
+        (args.host, int(args.port)), query, is_class_details, queue)
     worker_thread.start()
 
 # --------------------------------------------------------------------
@@ -218,7 +220,8 @@ def poll_queue_helper(queue, window, list_view):
     # class details or general class data output
     while True:
         try:
-            return_status, update_text, is_class_details = queue.get(block=False)
+            return_status, update_text, is_class_details = queue.get(
+                    block=False)
         except Empty:
             break
 
@@ -229,7 +232,8 @@ def poll_queue_helper(queue, window, list_view):
             else:
                 update_view(list_view, update_text)
         else:
-            QMessageBox.critical(window, 'Server Error', str(update_text))
+            QMessageBox.critical(window, 'Server Error',
+                str(update_text))
 
 # --------------------------------------------------------------------
 # MAIN METHOD

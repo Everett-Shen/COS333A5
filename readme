@@ -1,0 +1,29 @@
+eshen_tmenezes
+
+Name: Everett Shen
+Teammate's name: Trivan Menezes
+Assignment Number: 5
+
+My contribution: I worked predominately on fixing the errors from assignment 2
+and adapting the code so that the backend was multi-process. 
+
+My teammate's contribution: Trivan worked predominately on making reg.py 
+multithreaded and handling thread/process related errors 
+
+Help received:
+We did not consult any other people during this assignment.
+
+Information sources:
+We consulted the lecture slides and code examples for multi-process and
+multi-threaded programming
+
+We also consulted the online Python documentation for information
+on helper functions.
+
+Time spent: 4 hours
+
+Assessment of the assignment:
+It was surprisingly easier than expected to make our code multi-process
+and multi-threaded. This assignment really demonstrated the value of 
+making your programs multi-process/threaded. It was also satisfying to 
+fix errors that were left over from previous assignments

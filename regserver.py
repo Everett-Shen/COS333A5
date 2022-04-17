@@ -8,11 +8,11 @@
 from sys import stderr, exit
 import argparse
 from os import name
+from time import process_time
+from multiprocessing import Process
 from socket import socket, SOL_SOCKET, SO_REUSEADDR
 from pickle import dump, load
 from reghelpers import get_results_from_query as get_overview
-from multiprocessing import Process
-from time import process_time
 from regdetails import get_table_results
 
 # ----------------------------------------------------------------------
@@ -49,7 +49,7 @@ def handle_client(sock, delay):
     print('Closed socket in child process')
 
 
-def main():    
+def main():
 
     parser = argparse.ArgumentParser(
         description='Server for the registrar application',
@@ -59,7 +59,7 @@ def main():
         help='the port at which the server should listen')
 
     parser.add_argument('delay', type=int,
-        help='''the number of seconds that the server should delay 
+        help='''the number of seconds that the server should delay
         before responding to each client request''')
 
     args = parser.parse_args()
