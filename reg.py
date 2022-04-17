@@ -113,7 +113,6 @@ def init_gui(window, args):
         query = {
             'class_id': classid
         }
-        print(list_widget_row)
         # send to server
         print()
         if len(list_widget_row) > 1:
@@ -221,12 +220,11 @@ def main():
     parser.add_argument('host', metavar="host",
                         help='show only those \
                             classes whose department contains dept')
-    parser.add_argument('port', metavar="port",
+    parser.add_argument('port', type=int, metavar="port",
                         help='show only those \
                             classes whose course number contains num')
 
     args = parser.parse_args()
-    validate_args(args)
 
     app = QApplication(argv)
 
