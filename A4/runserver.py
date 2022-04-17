@@ -5,7 +5,7 @@
 # Author: Everett Shen, Trivan Menezes
 #-----------------------------------------------------------------------
 
-from sys import argv, exit, stderr
+from sys import exit, stderr
 import argparse
 from reg import app
 

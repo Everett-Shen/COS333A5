@@ -77,11 +77,11 @@ def search_results():
 
         for entry in classes:
             html += PATTERN.format(
-                entry[0], 
-                entry[0], 
-                entry[1], 
-                entry[2], 
-                entry[3], 
+                entry[0],
+                entry[0],
+                entry[1],
+                entry[2],
+                entry[3],
                 entry[4])
         html += '</tbody>'
 
@@ -94,9 +94,18 @@ def search_results():
 def regdetails():
     # handle error message
     error_msg = ''
-    class_details = get_table_results(request.args.get("classid")) 
-    if isinstance(class_details, tuple):
-        _, error_msg = class_details
+    #check if classid exists
+    classid=request.args.get("classid")
+    if not classid:
+        error_msg = "missing classid"
+        class_details=""
+    elif not classid.isdigit():
+        error_msg = "non-integer classid"
+        class_details=""
+    else:
+        class_details = get_table_results(classid)
+        if isinstance(class_details, tuple):
+            _, error_msg = class_details
     # return HTML template with details data
     html = render_template('regdetails.html',
         error_msg=error_msg,
@@ -104,3 +113,4 @@ def regdetails():
         class_details=class_details)
     response = make_response(html)
     return response
+    

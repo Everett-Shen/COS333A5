@@ -19,11 +19,13 @@ from PyQt5.QtGui import QFont
 # ----------------------------------------------------------------------
 
 
+# validate arguments to main
 def validate_args(args):
     if isinstance(args.port, int):
         print('Port number is not an integer', file=stderr)
 
 
+# initialize the labels to be displayed in the GUI
 def init_labels(labels_layout):
     labels_list = []
 
@@ -51,6 +53,7 @@ def init_labels(labels_layout):
     return labels_layout
 
 
+# initialize line edit elements
 def init_line_edits(line_edit_layout):
     dept_edit = QLineEdit()
     number_edit = QLineEdit()
@@ -66,6 +69,7 @@ def init_line_edits(line_edit_layout):
     return (dept_edit, number_edit, area_edit, title_edit)
 
 
+# initialize the GUI elements
 def init_gui(window, args):
     # layouts
     top_layout = QHBoxLayout()
@@ -83,6 +87,8 @@ def init_gui(window, args):
     dept_edit, number_edit, area_edit, title_edit = init_line_edits(
         line_edit_layout)
 
+    # slot to handle when submit button is clicked. Calls 
+    # server to query appropriate data
     def submit_button_slot():
         query = {
             'd': dept_edit.text(),
@@ -94,6 +100,8 @@ def init_gui(window, args):
         call_server_update_data(window, list_view, query,
                                 False, args)
 
+    # slot to hangle when a class' cell is highlighted. Calls server to
+    # query appropriate data
     def class_select_slot(list_widget_item):
         list_widget_row = list_widget_item.text().split(' ')
         classid = ''
@@ -144,6 +152,8 @@ def init_gui(window, args):
     return layout
 
 
+# connect to server at given port number and query for the data
+# being outputted from there.
 def call_server(host, port, query):
     result = (0, 'Unsuccessful Query')
 
@@ -166,6 +176,7 @@ def call_server(host, port, query):
     return result
 
 
+# update the cells in the list view of classes
 def update_view(list_view, class_data):
     list_view.clear()
     if class_data is None:
@@ -180,17 +191,19 @@ def update_view(list_view, class_data):
         list_view.item(0).setSelected(True)
 
 
+# calls server to retrieve class data, and updates class data displayed
+# in list view
 def call_server_update_data(window, list_view,
-    query, is_class_details, args):
-    print('Sent command: ', 'get_details' \
-        if is_class_details else 'get_overviews')
+                            query, is_class_details, args):
+    print('Sent command: ', 'get_details'
+          if is_class_details else 'get_overviews')
     return_status, update_text = call_server(
         args.host, int(args.port), query)
 
     if return_status:
         if is_class_details:
             QMessageBox.information(window,
-                'Class Details', update_text)
+                                    'Class Details', update_text)
         else:
             update_view(list_view, update_text)
     else:

@@ -1,0 +1,23 @@
+eshen_tmenezes
+
+Name: Trivan Menezes
+Teammate's name: Everett Shen
+Assignment Number: 4
+
+My contribution: I worked predominately on modifying the backend Flask code and inserting the code in the frontend which makes the AJAX calls to the backend. 
+
+My teammate's contribution: Everett worked predominately on modifying the frontend and integrating the Bootstrap styling. Additionally, he wrote much of the error-handling code.
+
+Help received:
+We did not consult any other people during this assignment.
+
+Information sources:
+We consulted the lecture slides and code examples for client-side programming regarding AJAX calls and Bootstrap integration.
+
+We also consulted the online Python documentation for information
+on helper functions.
+
+Time spent: 4 hours
+
+Assessment of the assignment:
+It was really satisfying to modify the Registrar application so that its UI is instantly responsive to all user inputs. We learned a lot about integrating AJAX calls on user keystrokes and also setting up a route in the backend to return fragments of data to insert into the frontend. Additionally, the process of using Bootstrap to create responsive UI styling was also satisfying. I imagine these skills will prove to be very useful in real-life projects going forward. Overall, this was a great assignment.
