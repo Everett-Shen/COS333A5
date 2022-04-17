@@ -9,17 +9,21 @@ from sys import exit, argv, stderr
 import argparse
 from socket import socket
 from pickle import dump, load
+from threading import Thread
+from queue import Queue, Empty
 from PyQt5.QtWidgets import QApplication, QFrame, QLabel, QMainWindow
 from PyQt5.QtWidgets import QGridLayout, QDesktopWidget, QVBoxLayout
 from PyQt5.QtWidgets import QHBoxLayout, QLineEdit, QPushButton
 from PyQt5.QtWidgets import QListWidget, QListWidgetItem, QMessageBox
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QFont
 
 # ----------------------------------------------------------------------
-
+# INIT GUI
 
 # validate arguments to main
+
+
 def validate_args(args):
     if isinstance(args.port, int):
         print('Port number is not an integer', file=stderr)
@@ -70,26 +74,24 @@ def init_line_edits(line_edit_layout):
 
 
 # initialize the GUI elements
-def init_gui(window, args):
+def init_gui(args, queue):
     # layouts
     top_layout = QHBoxLayout()
     top_layout.setContentsMargins(10, 20, 10, 0)
 
     labels_layout = QVBoxLayout()
     line_edit_layout = QVBoxLayout()
-    submit_button_layout = QVBoxLayout()
 
     top_layout.addLayout(labels_layout)
     top_layout.addLayout(line_edit_layout)
-    top_layout.addLayout(submit_button_layout)
 
     labels_layout = init_labels(labels_layout)
     dept_edit, number_edit, area_edit, title_edit = init_line_edits(
         line_edit_layout)
 
-    # slot to handle when submit button is clicked. Calls 
+    # slot to handle when submit button is clicked. Calls
     # server to query appropriate data
-    def submit_button_slot():
+    def submit_slot():
         query = {
             'd': dept_edit.text(),
             'n': number_edit.text(),
@@ -97,8 +99,7 @@ def init_gui(window, args):
             't': title_edit.text()
         }
         # send to server
-        call_server_update_data(window, list_view, query,
-                                False, args)
+        call_server_update_data(query, False, args, queue)
 
     # slot to hangle when a class' cell is highlighted. Calls server to
     # query appropriate data
@@ -115,20 +116,13 @@ def init_gui(window, args):
         }
 
         # send to server
-        call_server_update_data(window, list_view, query,
-                                True, args)
-
-    # submit button
-    submit_button = QPushButton('Submit')
-    submit_button_layout.addWidget(submit_button)
-    # submit signal handling
-    submit_button.clicked.connect(submit_button_slot)
+        call_server_update_data(query, True, args, queue)
 
     # slots to handle events
-    dept_edit.returnPressed.connect(submit_button_slot)
-    number_edit.returnPressed.connect(submit_button_slot)
-    area_edit.returnPressed.connect(submit_button_slot)
-    title_edit.returnPressed.connect(submit_button_slot)
+    dept_edit.textChanged.connect(submit_slot)
+    number_edit.textChanged.connect(submit_slot)
+    area_edit.textChanged.connect(submit_slot)
+    title_edit.textChanged.connect(submit_slot)
 
     list_view = QListWidget()
     # slots to handle signals
@@ -140,41 +134,55 @@ def init_gui(window, args):
     layout.addWidget(list_view, 1, 0)
 
     # load initial data
-    call_server_update_data(window, list_view, {
+    call_server_update_data({
         'd': dept_edit.text(),
         'n': number_edit.text(),
         'a': area_edit.text(),
         't': title_edit.text()
     },
-        False, args)
+        False, args, queue)
 
     # returns tuple of GUI elements
-    return layout
+    return layout, list_view
+
+# --------------------------------------------------------------------
+# THREAD HANDLING CODE
 
 
-# connect to server at given port number and query for the data
-# being outputted from there.
-def call_server(host, port, query):
-    result = (0, 'Unsuccessful Query')
+class WorkerThread (Thread):
 
-    try:
-        with socket() as sock:
-            sock.connect((host, port))
-            out_flo = sock.makefile(mode='wb')
-            dump(query, out_flo)
-            out_flo.flush()
+    def __init__(self, host, port, query, is_class_details, queue):
+        Thread.__init__(self)
+        self._host = host
+        self._port = port
+        self._query = query
+        self._queue = queue
+        self._is_class_details = is_class_details
 
-            in_flo = sock.makefile(mode='rb')
-            result = load(in_flo)
+    def run(self):
+        result = (0, 'Unsuccessful Query')
+        try:
+            with socket() as sock:
+                sock.connect((self._host, self._port))
+                out_flo = sock.makefile(mode='wb')
+                dump(self._query, out_flo)
+                out_flo.flush()
 
-    except EOFError as err:
-        result = (0, str(err))
+                in_flo = sock.makefile(mode='rb')
+                result = load(in_flo)
+                print('new socket!!')
 
-    except Exception as ex:
-        result = (0, str(ex))
+        except EOFError as err:
+            result = (0, str(err))
 
-    return result
+        except Exception as ex:
+            result = (0, str(ex))
 
+        finally:
+            self._queue.put((result[0], result[1], self._is_class_details))
+
+# --------------------------------------------------------------------
+# SERVER CALLING CODE
 
 # update the cells in the list view of classes
 def update_view(list_view, class_data):
@@ -193,21 +201,37 @@ def update_view(list_view, class_data):
 
 # calls server to retrieve class data, and updates class data displayed
 # in list view
-def call_server_update_data(window, list_view,
-                            query, is_class_details, args):
+def call_server_update_data(query, is_class_details, args, queue):
     print('Sent command: ', 'get_details'
           if is_class_details else 'get_overviews')
-    return_status, update_text = call_server(
-        args.host, int(args.port), query)
+    # return_status, update_text = call_server(
+    #     args.host, int(args.port), query)
+    worker_thread = WorkerThread(
+        args.host, int(args.port), query, is_class_details, queue)
+    worker_thread.start()
 
-    if return_status:
-        if is_class_details:
-            QMessageBox.information(window,
-                                    'Class Details', update_text)
+# --------------------------------------------------------------------
+# POLL HANDLING
+
+def poll_queue_helper(queue, window, list_view):
+
+    while True:
+        try:
+            return_status, update_text, is_class_details = queue.get(block=False)
+        except Empty:
+            break
+
+        if return_status:
+            if is_class_details:
+                QMessageBox.information(window,
+                                        'Class Details', update_text)
+            else:
+                update_view(list_view, update_text)
         else:
-            update_view(list_view, update_text)
-    else:
-        QMessageBox.critical(window, 'Server Error', str(update_text))
+            QMessageBox.critical(window, 'Server Error', str(update_text))
+
+# --------------------------------------------------------------------
+# MAIN METHOD
 
 
 def main():
@@ -231,8 +255,18 @@ def main():
     window = QMainWindow()
     window.setWindowTitle('Princeton University Class Search')
 
+    # create queue for multi-threaded behavior; pass it in
+    queue = Queue()
+
     # initialize GUI elements
-    layout = init_gui(window, args)
+    layout, list_view = init_gui(args, queue)
+
+    def poll_queue():
+        poll_queue_helper(queue, window, list_view)
+    timer = QTimer()
+    timer.timeout.connect(poll_queue)
+    timer.setInterval(1000)
+    timer.start()
 
     frame = QFrame()
     frame.setLayout(layout)
