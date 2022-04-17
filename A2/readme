@@ -1,0 +1,44 @@
+eshen_tmenezes
+
+Name: Trivan Menezes
+Teammate's name: Everett Shen
+Assignment Number: 2
+
+My contribution:
+I led the programming effort during the creation of reg.py. I was the
+"driver" during this period in our pair-programming setup, and Everett
+gave advice about the approach to the code and cases to consider.
+One of my largest contributions included implementing the GUI 
+according to specifications using PyQt5, and performing client side networking 
+and error handling. We both contributed to designing the architecture of the
+program and specifications regarding how data should be communicated.
+
+My teammate's contribution:
+Everett led the programming effort during the creation of regserver.py and its helper functions.
+He was the "driver" in the pair-programming setup during this time, while
+I gave advice about the best practices to use and the most appropriate
+method of implementing certain features. He handled the server side 
+networking and error handling, as well as reading and writing from
+the database. We both contributed to designing the architecture of the
+program and specifications regarding how data should be communicated.
+
+Help received:
+We did not consult any other people during this assignment.
+
+Information sources:
+We consulted the lecture slides and code examples for Network
+Programming and GUI programming, as well as the PyQt5 docs
+
+We also consulted the online Python documentation for information
+on helper functions.
+
+Time spent: 7 hours
+
+Assessment of the assignment:
+It was cool to be able to use what we created for assignment 1 as a base
+and use what we learned in class to take it to the next level. Our extra
+time spent in the first assignment making database functions modular 
+really paid off, as it was pretty easy to reuse functions with minimal change.
+We were surprised that working with sockets was easier than expected, and 
+that it worked rather flawlessly in conjunction with the frontend due to 
+separation of concerns.
