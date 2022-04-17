@@ -80,11 +80,16 @@ def format_details(baserows, deptdata, profnames):
 
 def get_table_results(classid):
     base_rows = select_from_table(BASE_STMT_STR, [classid])
+    # determines if an error happened (check first here so we don't
+    # print error message 3 times)
+    for row in [base_rows]:
+        if isinstance(row, tuple):
+            return row
     dept_rows = select_from_table(DEPT_STMT_STR, [classid])
     prof_rows = select_from_table(PROF_STMT_STR, [classid])
 
     # determines if an error happened
-    for row in [base_rows, dept_rows, prof_rows]:
+    for row in [dept_rows, prof_rows]:
         if isinstance(row, tuple):
             return row
 
