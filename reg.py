@@ -114,7 +114,6 @@ def init_gui(args, queue):
         query = {
             'class_id': classid
         }
-
         # send to server
         call_server_update_data(query, True, args, queue)
 
@@ -243,12 +242,11 @@ def main():
     parser.add_argument('host', metavar="host",
                         help='show only those \
                             classes whose department contains dept')
-    parser.add_argument('port', metavar="port",
+    parser.add_argument('port', type=int, metavar="port",
                         help='show only those \
                             classes whose course number contains num')
 
     args = parser.parse_args()
-    validate_args(args)
 
     app = QApplication(argv)
 
